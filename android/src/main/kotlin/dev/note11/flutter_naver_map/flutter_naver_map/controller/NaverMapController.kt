@@ -232,10 +232,8 @@ internal class NaverMapController(
     }
 
     override fun setContentPadding(rawEdgeInsets: Any, onSuccess: () -> Unit) {
-        println("NaverMapController.setContentPadding called")
         val applier = NaverMapApplierImpl(naverMap)
         applier.setContentPadding(rawEdgeInsets)
-        println("NaverMapController.setContentPadding completed")
         onSuccess()
     }
 
