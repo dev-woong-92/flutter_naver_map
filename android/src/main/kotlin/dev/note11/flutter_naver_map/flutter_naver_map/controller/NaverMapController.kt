@@ -35,6 +35,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import dev.note11.flutter_naver_map.flutter_naver_map.applier.option.NaverMapApplierImpl
 
 internal class NaverMapController(
     private val naverMap: NaverMap,
@@ -227,6 +228,12 @@ internal class NaverMapController(
 
     override fun forceRefresh(onSuccess: () -> Unit) {
         naverMap.forceRefresh()
+        onSuccess()
+    }
+
+    override fun setContentPadding(rawEdgeInsets: Any, onSuccess: () -> Unit) {
+        val applier = NaverMapApplierImpl(naverMap)
+        applier.setContentPadding(rawEdgeInsets)
         onSuccess()
     }
 

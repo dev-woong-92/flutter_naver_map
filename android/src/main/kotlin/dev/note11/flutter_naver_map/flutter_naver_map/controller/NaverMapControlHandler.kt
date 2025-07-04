@@ -103,6 +103,10 @@ internal interface NaverMapControlHandler {
             onSuccess = result::send
         )
         "forceRefresh" -> forceRefresh(onSuccess = result::send)
+        "setContentPadding" -> setContentPadding(
+            rawEdgeInsets = call.arguments,
+            onSuccess = result::send,
+        )
         "updateOptions" -> updateOptions(
             rawOptions = call.arguments.asMap(), onSuccess = result::send,
         )
@@ -158,6 +162,8 @@ internal interface NaverMapControlHandler {
     fun clearOverlays(type: NOverlayType?, onSuccess: () -> Unit)
 
     fun forceRefresh(onSuccess: () -> Unit)
+
+    fun setContentPadding(rawEdgeInsets: Any, onSuccess: () -> Unit)
 
     fun updateOptions(rawOptions: Map<String, Any>, onSuccess: () -> Unit)
 

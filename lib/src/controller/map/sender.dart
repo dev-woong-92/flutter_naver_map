@@ -91,6 +91,10 @@ abstract class _NaverMapControlSender {
   /// 지도를 강제로 새로고침합니다.
   Future<void> forceRefresh();
 
+  /// 지도의 영역을 변경합니다.
+  ///
+  Future<void> updateContentPadding(NEdgeInsets edgeInsets);
+
   /*
     --- internal methods ---
    */
@@ -104,7 +108,7 @@ abstract class _NaverMapControlSender {
   /*
     --- private methods ---
   */
-  Future<void> updateOptions(NaverMapViewOptions options);
+  Future<void> _updateOptions(NaverMapViewOptions options);
 
   Future<void> _updateClusteringOptions(NaverMapClusteringOptions options);
 }
