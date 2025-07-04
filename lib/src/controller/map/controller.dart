@@ -202,7 +202,7 @@ class _NaverMapControllerImpl
     --- private methods ---
   */
   @override
-  Future<void> updateOptions(NaverMapViewOptions options) {
+  Future<void> _updateOptions(NaverMapViewOptions options) {
     return invokeMethod("updateOptions", options);
   }
 
@@ -226,5 +226,10 @@ class _NaverMapControllerImpl
   @override
   void dispose() {
     overlayController.disposeChannel();
+  }
+
+  @override
+  Future<void> updateContentPadding(NEdgeInsets edgeInsets) {
+    return invokeMethod("setContentPadding", edgeInsets);
   }
 }
