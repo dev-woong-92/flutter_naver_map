@@ -177,8 +177,10 @@ internal class NaverMapController: NaverMapControlSender, NaverMapControlHandler
     }
     
     func setContentPadding(rawEdgeInsets: Any, onSuccess: @escaping (Any?) -> Void) {
+        print("NaverMapController.setContentPadding called")
         let applier = NaverMapApplierImpl(naverMap, isFirst: false)
         applier.setContentPadding(rawEdgeInsets)
+        print("NaverMapController.setContentPadding completed")
         onSuccess(nil)
     }
     

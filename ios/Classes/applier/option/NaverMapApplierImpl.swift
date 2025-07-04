@@ -134,8 +134,10 @@ internal class NaverMapApplierImpl: NaverMapOptionApplier {
     }
 
     func setContentPadding(_ rawEdgeInsets: Any) {
+        print("iOS setContentPadding called with: \(rawEdgeInsets)")
         let insets = NEdgeInsets.fromMessageable(rawEdgeInsets).uiEdgeInsets
-        mapView.setContentInset(insets, keepCamera: false, reason: Int32(NMFMapChangedByContentPadding))
+        print("Setting contentInset: \(insets)")
+        mapView.setContentInset(insets, keepCamera: true, reason: Int32(NMFMapChangedByDeveloper))
     }
 
     func setMinZoom(_ rawLevel: Any) {
