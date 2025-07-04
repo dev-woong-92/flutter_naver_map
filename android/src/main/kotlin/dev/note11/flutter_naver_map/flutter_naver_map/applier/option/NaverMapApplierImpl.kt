@@ -132,10 +132,8 @@ class NaverMapApplierImpl(
     }
 
     override fun setContentPadding(rawEdgeInsets: Any) {
-        println("Android setContentPadding called with: $rawEdgeInsets")
         val nEdgeInsets = NEdgeInsets.fromMessageable(rawEdgeInsets)
         nEdgeInsets.use { l, t, r, b ->
-            println("Setting contentPadding: left=$l, top=$t, right=$r, bottom=$b")
             naverMap.setContentPadding(l, t, r, b, true, CameraUpdate.REASON_DEVELOPER)
         }
     }
