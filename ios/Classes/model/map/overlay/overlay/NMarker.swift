@@ -32,8 +32,8 @@ internal struct NMarker: AddableOverlay {
     
     func applyAtRawOverlay(_ marker: NMFMarker) -> NMFMarker {
         marker.position = position
-        if let icon = icon {
-            marker.iconImage = icon.overlayImage
+        if let icon = icon, let image = icon.overlayImage {
+            marker.iconImage = image
         }
         marker.iconTintColor = iconTintColor
         marker.alpha = alpha
