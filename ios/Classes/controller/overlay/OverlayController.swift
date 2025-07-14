@@ -198,7 +198,11 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setIcon(_ overlay: NMFLocationOverlay, rawNOverlayImage: Any) {
-        overlay.icon = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage
+        if let image = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage {
+            overlay.icon = image
+        } else {
+            print("[OverlayController] setIcon: overlayImage가 nil입니다. 기본 이미지를 사용하거나 스킵합니다.")
+        }
     }
 
     func setIconSize(_ overlay: NMFLocationOverlay, rawSize: Any) {
@@ -220,7 +224,11 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setSubIcon(_ overlay: NMFLocationOverlay, rawNOverlayImage: Any?) {
-        overlay.subIcon = castOrNull(rawNOverlayImage, caster: NOverlayImage.fromMessageable)?.overlayImage
+        if let image = castOrNull(rawNOverlayImage, caster: NOverlayImage.fromMessageable)?.overlayImage {
+            overlay.subIcon = image
+        } else {
+            print("[OverlayController] setSubIcon: overlayImage가 nil입니다. 기본 이미지를 사용하거나 스킵합니다.")
+        }
     }
 
     func setSubIconSize(_ overlay: NMFLocationOverlay, rawSize: Any) {
@@ -249,7 +257,12 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setIcon(_ marker: NMFMarker, rawIcon: Any?) {
-        marker.iconImage = castOrNull(rawIcon, caster: NOverlayImage.fromMessageable)?.overlayImage ?? NMF_MARKER_IMAGE_GREEN
+        if let image = castOrNull(rawIcon, caster: NOverlayImage.fromMessageable)?.overlayImage {
+            marker.iconImage = image
+        } else {
+            marker.iconImage = NMF_MARKER_IMAGE_GREEN
+            print("[OverlayController] setIcon: overlayImage가 nil입니다. 기본 마커 이미지를 사용합니다.")
+        }
     }
 
     func setIconTintColor(_ marker: NMFMarker, rawIconTintColor: Any) {
@@ -396,7 +409,11 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setImage(_ groundOverlay: NMFGroundOverlay, rawNOverlayImage: Any) {
-        groundOverlay.overlayImage = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage
+        if let image = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage {
+            groundOverlay.overlayImage = image
+        } else {
+            print("[OverlayController] setImage: overlayImage가 nil입니다. 기본 이미지를 사용하거나 스킵합니다.")
+        }
     }
 
     func setAlpha(_ groundOverlay: NMFGroundOverlay, rawAlpha: Any) {
@@ -498,7 +515,11 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setPatternImage(_ pathOverlay: NMFPath, rawNOverlayImage: Any) {
-        pathOverlay.patternIcon = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage
+        if let image = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage {
+            pathOverlay.patternIcon = image
+        } else {
+            print("[OverlayController] setPatternImage: overlayImage가 nil입니다. 기본 이미지를 사용하거나 스킵합니다.")
+        }
     }
 
     func setPatternInterval(_ pathOverlay: NMFPath, rawInterval: Any) {
@@ -541,7 +562,11 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setPatternImage(_ multipartPathOverlay: NMFMultipartPath, rawNOverlayImage: Any) {
-        multipartPathOverlay.patternIcon = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage
+        if let image = NOverlayImage.fromMessageable(rawNOverlayImage).overlayImage {
+            multipartPathOverlay.patternIcon = image
+        } else {
+            print("[OverlayController] setPatternImage: overlayImage가 nil입니다. 기본 이미지를 사용하거나 스킵합니다.")
+        }
     }
 
     func setPatternInterval(_ multipartPathOverlay: NMFMultipartPath, rawInterval: Any) {
