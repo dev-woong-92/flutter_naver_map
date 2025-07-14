@@ -9,18 +9,30 @@ part of "../../../../../flutter_naver_map.dart";
 ///
 /// `NaverMap.clusterOptions.clusterMarkerBuilder`를 통해, 커스텀할 수 있습니다.
 class NClusterMarker extends _NMarkerWrapper<NClusterMarker> {
-  NClusterMarker._({
-    required super.id,
-    required super.position,
-  }) : super(type: NOverlayType.clusterableMarker) {
+  NClusterMarker._({required super.id, required super.position})
+    : super(type: NOverlayType.clusterableMarker) {
     _captionAligns = const [NAlign.center];
     _anchor = NPoint.relativeCenter;
   }
 
   Future<void> _apply(_NOverlayController overlayController) async {
-    setIsVisible(true);
-    _addedOnMap(overlayController); // TODO: 삭제시 핸들링 유지 유무 확인
-    _send("lSyncClusterMarker", this);
+    try {
+      print("[NClusterMarker] _apply 시작 - id: $id");
+      print("[NClusterMarker] overlayController: $overlayController");
+
+      setIsVisible(true);
+      print("[NClusterMarker] setIsVisible(true) 성공");
+
+      _addedOnMap(overlayController);
+      print("[NClusterMarker] _addedOnMap 성공");
+
+      print("[NClusterMarker] _send 호출 전 - method: lSyncClusterMarker");
+      _send("lSyncClusterMarker", this);
+      print("[NClusterMarker] _send 성공");
+    } catch (e, stackTrace) {
+      print("[NClusterMarker] _apply 실패: $e");
+      print("[NClusterMarker] stackTrace: $stackTrace");
+    }
   }
 
   /// 캡션이 어디에 위치하는 지 나타냅니다.

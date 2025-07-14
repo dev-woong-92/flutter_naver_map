@@ -77,3 +77,23 @@ internal class NClusterInfo: NSObject, NClusterNode {
         return hasher.finalize()
     }
 }
+
+        return result
+    }
+    
+    override func isEqual(_ o: Any?) -> Bool {
+        guard let o = o as? NClusterInfo else { return false }
+        if self === o { return true }
+        return children == o.children
+        && clusterSize == o.clusterSize
+        && position == o.position
+    }
+
+    override var hash: Int {
+        var hasher = Hasher()
+        hasher.combine(children)
+        hasher.combine(clusterSize)
+        hasher.combine(position)
+        return hasher.finalize()
+    }
+}

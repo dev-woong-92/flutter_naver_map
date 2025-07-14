@@ -86,14 +86,33 @@ internal class ClusteringController: NMCDefaultClusterMarkerUpdater, NMCThreshol
     }
     
     private func onClusterMarkerUpdate(_ clusterMarkerInfo: NMCClusterMarkerInfo, _ marker: NMFMarker) {
-        guard let info = clusterMarkerInfo.tag as? NClusterInfo else { return }
-//        overlayController.saveOverlay(overlay: marker, info: info.markerInfo.messageOverlayInfo)
+        print("[ClusteringController] onClusterMarkerUpdate 시작")
+        print("[ClusteringController] clusterMarkerInfo: \(clusterMarkerInfo)")
+        print("[ClusteringController] marker: \(marker)")
+        
+        guard let info = clusterMarkerInfo.tag as? NClusterInfo else { 
+            print("[ClusteringController] 오류: clusterMarkerInfo.tag가 NClusterInfo가 아님 - \(clusterMarkerInfo.tag?.description ?? "nil")")
+            return 
+        }
+        
+        print("[ClusteringController] NClusterInfo 추출 성공: \(info)")
+        
         marker.hidden = true
+        print("[ClusteringController] marker.hidden = true 설정")
+        
         sendClusterMarkerEvent(info: info)
+        print("[ClusteringController] sendClusterMarkerEvent 호출 완료")
     }
     
     private func sendClusterMarkerEvent(info: NClusterInfo) {
-        messageSender("clusterMarkerBuilder", info.toMessageable())
+        print("[ClusteringController] sendClusterMarkerEvent 시작")
+        print("[ClusteringController] info: \(info)")
+        
+        let messageable = info.toMessageable()
+        print("[ClusteringController] toMessageable 결과: \(messageable)")
+        
+        messageSender("clusterMarkerBuilder", messageable)
+        print("[ClusteringController] messageSender 호출 완료")
     }
     
     private func onClusterableMarkerUpdate(_ clusterableMarkerInfo: NMCLeafMarkerInfo, _ marker: NMFMarker) {
