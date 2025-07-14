@@ -9,12 +9,9 @@ internal struct NGroundOverlay: AddableOverlay {
     let image: NOverlayImage
     let alpha: CGFloat
 
-    func createMapOverlay() -> OverlayType? {
-        guard let image = image.overlayImage else {
-            print("[NGroundOverlay] overlayImage가 nil입니다. 오버레이를 생성하지 않습니다.")
-            return nil
-        }
-        let overlay = NMFGroundOverlay(bounds: bounds, image: image)
+    func createMapOverlay() -> OverlayType {
+        let overlayImage: NMFOverlayImage = image.overlayImage ?? NMFOverlayImage(image: UIImage())
+        let overlay = NMFGroundOverlay(bounds: bounds, image: overlayImage)
         return applyAtRawOverlay(overlay)
     }
     
