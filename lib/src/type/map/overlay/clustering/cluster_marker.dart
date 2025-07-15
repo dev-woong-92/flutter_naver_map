@@ -10,14 +10,13 @@ part of "../../../../../flutter_naver_map.dart";
 /// `NaverMap.clusterOptions.clusterMarkerBuilder`를 통해, 커스텀할 수 있습니다.
 class NClusterMarker extends _NMarkerWrapper<NClusterMarker> {
   NClusterMarker._({required super.id, required super.position})
-    : super(type: NOverlayType.clusterableMarker) {
+      : super(type: NOverlayType.clusterableMarker) {
     _captionAligns = const [NAlign.center];
     _anchor = NPoint.relativeCenter;
   }
 
   Future<void> _apply(_NOverlayController overlayController) async {
     try {
-      print("[NClusterMarker] _apply 시작 - id: $id");
       print("[NClusterMarker] overlayController: $overlayController");
 
       setIsVisible(true);

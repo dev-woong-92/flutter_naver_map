@@ -21,7 +21,7 @@ class NaverMapClusteringOptions with NMessageableWithMap {
   ///
   /// 기본 값은 null이며, 이때는 기본적으로 [NaverMapClusteringOptions.defaultClusterMarkerBuilder]가 실행됩니다.
   final Function(NClusterInfo info, NClusterMarker clusterMarker)?
-  clusterMarkerBuilder;
+      clusterMarkerBuilder;
 
   const NaverMapClusteringOptions({
     this.enableZoomRange = defaultClusteringZoomRange,
@@ -52,9 +52,6 @@ class NaverMapClusteringOptions with NMessageableWithMap {
       final clusterMarker = NClusterMarker._(
         id: info._id,
         position: info.position,
-      );
-      print(
-        "[NaverMapClusteringOptions] NClusterMarker 생성 성공: ${clusterMarker.id}",
       );
 
       final builder = clusterMarkerBuilder ?? defaultClusterMarkerBuilder;
@@ -93,7 +90,6 @@ class NaverMapClusteringOptions with NMessageableWithMap {
     try {
       print("[NaverMapClusteringOptions] defaultClusterMarkerBuilder 시작");
       print("[NaverMapClusteringOptions] info: $info");
-      print("[NaverMapClusteringOptions] clusterMarker: ${clusterMarker.id}");
 
       final caption = NOverlayCaption(
         text: info.size.toString(),
@@ -112,10 +108,10 @@ class NaverMapClusteringOptions with NMessageableWithMap {
 
   @override
   NPayload toNPayload() => NPayload.make({
-    "enableZoomRange": enableZoomRange,
-    "animationDuration": animationDuration.inMilliseconds,
-    "mergeStrategy": mergeStrategy,
-  });
+        "enableZoomRange": enableZoomRange,
+        "animationDuration": animationDuration.inMilliseconds,
+        "mergeStrategy": mergeStrategy,
+      });
 
   @override
   String toString() => "$runtimeType: ${toNPayload().map}";
@@ -125,13 +121,14 @@ class NaverMapClusteringOptions with NMessageableWithMap {
     Duration? animationDuration,
     NClusterMergeStrategy? mergeStrategy,
     Function(NClusterInfo info, NClusterMarker clusterMarker)?
-    clusterMarkerBuilder,
-  }) => NaverMapClusteringOptions(
-    enableZoomRange: enableZoomRange ?? this.enableZoomRange,
-    animationDuration: animationDuration ?? this.animationDuration,
-    mergeStrategy: mergeStrategy ?? this.mergeStrategy,
-    clusterMarkerBuilder: clusterMarkerBuilder ?? this.clusterMarkerBuilder,
-  );
+        clusterMarkerBuilder,
+  }) =>
+      NaverMapClusteringOptions(
+        enableZoomRange: enableZoomRange ?? this.enableZoomRange,
+        animationDuration: animationDuration ?? this.animationDuration,
+        mergeStrategy: mergeStrategy ?? this.mergeStrategy,
+        clusterMarkerBuilder: clusterMarkerBuilder ?? this.clusterMarkerBuilder,
+      );
 
   static const defaultClusteringZoomRange = NInclusiveRange(0, 20);
 
