@@ -91,14 +91,14 @@ class NaverMapClusteringOptions with NMessageableWithMap {
       print("[NaverMapClusteringOptions] defaultClusterMarkerBuilder 시작");
       print("[NaverMapClusteringOptions] info: $info");
 
-      final caption = NOverlayCaption(
-        text: info.size.toString(),
-        color: Colors.white,
-        haloColor: Colors.transparent,
-      );
-      print("[NaverMapClusteringOptions] NOverlayCaption 생성: $caption");
-
-      clusterMarker.setCaption(caption);
+      // final caption = NOverlayCaption(
+      //   text: 'info.size.toString()',
+      //   color: Colors.white,
+      //   haloColor: Colors.transparent,
+      // );
+      // print("[NaverMapClusteringOptions] NOverlayCaption 생성: $caption");
+      //
+      // clusterMarker.setCaption(caption);
       print("[NaverMapClusteringOptions] setCaption 성공");
     } catch (e, stackTrace) {
       print("[NaverMapClusteringOptions] defaultClusterMarkerBuilder 실패: $e");
