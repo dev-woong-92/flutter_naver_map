@@ -106,11 +106,17 @@ internal class OverlayController(
         val query = NOverlayQuery.fromQuery(call.method)
         val overlay = getOverlay(query.info)
 
-        // �� 클러스터 마커인 경우 추가 검증
+        // 🚨 오버레이가 null인 경우 안전하게 처리
         if (overlay == null) {
-            // 클러스터 마커가 이미 삭제된 경우 로그만 출력하고 null 반환
-            println("Cluster marker already remove")
-            return null
+            // 클러스터 마커인 경우 무시 (이미 삭제된 것으로 간주)
+            if (query.info.type == NOverlayType.CLUSTERABLE_MARKER) {
+                println("Cluster marker already removed: ${query.info.id}")
+                result.success(null)
+                return
+            }
+            // 다른 오버레이인 경우 오류 반환
+            result.error("OVERLAY_NOT_FOUND", "overlay can't found because it's null", null)
+            return
         }
 
         val isInvokedOnCommonOverlay =
