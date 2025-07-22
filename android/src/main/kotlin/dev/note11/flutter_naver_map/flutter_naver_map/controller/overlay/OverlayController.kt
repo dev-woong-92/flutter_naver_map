@@ -110,7 +110,7 @@ internal class OverlayController(
         if (overlay == null) {
             // 클러스터 마커인 경우 무시 (이미 삭제된 것으로 간주)
             if (query.info.type == NOverlayType.CLUSTERABLE_MARKER) {
-                println("Cluster marker already removed: ${query.info.id}")
+                println("Cluster marker already removed: ${query.info.type}")
                 result.success(null)
                 return
             }
