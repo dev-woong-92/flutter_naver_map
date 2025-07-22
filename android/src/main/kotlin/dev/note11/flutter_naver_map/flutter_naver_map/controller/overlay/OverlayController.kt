@@ -107,9 +107,9 @@ internal class OverlayController(
         val overlay = getOverlay(query.info)
 
         // �� 클러스터 마커인 경우 추가 검증
-        if (overlay == null && info.type == NOverlayType.CLUSTERABLE_MARKER) {
+        if (overlay == null) {
             // 클러스터 마커가 이미 삭제된 경우 로그만 출력하고 null 반환
-            println("Cluster marker already removed: ${info.id}")
+            println("Cluster marker already remove")
             return null
         }
 
