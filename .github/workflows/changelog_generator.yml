@@ -1,0 +1,115 @@
+name: PR Changelog Comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+    branches:
+      - main
+      - pre-release
+
+jobs:
+  post-changelog-comment:
+    if: |
+      (github.event.action == 'opened' || github.event.action == 'labeled') &&
+      (contains(github.event.pull_request.labels.*.name, 'release') || 
+       contains(github.event.pull_request.labels.*.name, 'prerelease'))
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Get version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Extract changelog for current version
+        id: extract_changelog
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          echo "Extracting changelog for version $VERSION..."
+          
+          # Read CHANGELOG.md and extract section for current version
+          if [ -f "CHANGELOG.md" ]; then
+            # Extract content between current version header and next version header
+            CHANGELOG_CONTENT=$(awk -v ver="## $VERSION" '
+              $0 ~ ver {found=1; header=$0; next}
+              found && /^## / {exit}
+              found {print}
+            ' CHANGELOG.md)
+            
+            if [ -n "$CHANGELOG_CONTENT" ]; then
+              echo "FOUND=true" >> $GITHUB_OUTPUT
+              # Save content to a file to avoid any escaping issues
+              echo "$CHANGELOG_CONTENT" > /tmp/changelog_content.txt
+            else
+              echo "FOUND=false" >> $GITHUB_OUTPUT
+              echo "No changelog entry found for version $VERSION"
+            fi
+          else
+            echo "FOUND=false" >> $GITHUB_OUTPUT
+            echo "CHANGELOG.md file not found"
+          fi
+
+      - name: Comment on PR with changelog
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.VERSION }}';
+            const changelogFound = '${{ steps.extract_changelog.outputs.FOUND }}' === 'true';
+            const fs = require('fs');
+            
+            let comment;
+            if (changelogFound) {
+              // Read changelog content from file to avoid escaping issues
+              const changelogContent = fs.readFileSync('/tmp/changelog_content.txt', 'utf8');
+              comment = `## 📋 Changelog for v${version}
+            
+            ${changelogContent}
+            
+            ---
+            _This is an automated comment showing the changelog entry for this release._`;
+            } else {
+              comment = `## ⚠️ No Changelog Entry Found
+            
+            No changelog entry was found for version ${version} in CHANGELOG.md.
+            
+            Please add a changelog entry before merging this PR.`;
+            }
+            
+            // Check if we already commented
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Changelog for v' + version)
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
