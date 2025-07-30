@@ -52,7 +52,7 @@ class NaverMap extends StatefulWidget {
   /// 어떤 이유로 카메라가 이동했는지 알 수 있는 [NCameraUpdateReason]과,
   /// 애니메이션과 함께 부드럽게 이동했는지 알 수 있는 [bool]값을 매개변수로 제공합니다.
   final void Function(NCameraUpdateReason reason, bool animated)?
-      onCameraChange;
+  onCameraChange;
 
   /// 카메라가 완전히 멈추었을 때, 실행 되는 함수입니다.
   /// 매 카메라 이동마다 [onCameraChange] 다음에 한번만 실행됩니다.
@@ -99,56 +99,68 @@ class _NaverMapState extends State<NaverMap>
   @override
   Widget build(BuildContext context) {
     assert(
-        FlutterNaverMap._isInitialized || legacyMapInitializer._isInitialized);
+      FlutterNaverMap._isInitialized || legacyMapInitializer._isInitialized,
+    );
 
     _updateOptionsIfNeeded();
 
-    return Stack(children: [
-      Positioned.fill(
+    return Stack(
+      children: [
+        Positioned.fill(
           child: _PlatformViewCreator.createPlatformView(
-        viewType: NChannel.naverMapNativeView.str,
-        gestureRecognizers: _createGestureRecognizers(widget.forceGesture),
-        creationParams: widget.options.toNPayload(),
-        onPlatformViewCreated: _onPlatformViewCreated,
-        androidSdkVersion: FlutterNaverMap._androidSdkVersion ??
-            legacyMapInitializer._androidSdkVersion,
-        forceHybridComposition: widget.forceHybridComposition,
-        forceGLSurfaceView: widget.forceGLSurfaceView,
-      )),
-      _naverLogo(widget.options),
-    ]);
+            viewType: NChannel.naverMapNativeView.str,
+            gestureRecognizers: _createGestureRecognizers(widget.forceGesture),
+            creationParams: widget.options.toNPayload(),
+            onPlatformViewCreated: _onPlatformViewCreated,
+            androidSdkVersion:
+                FlutterNaverMap._androidSdkVersion ??
+                legacyMapInitializer._androidSdkVersion,
+            forceHybridComposition: widget.forceHybridComposition,
+            forceGLSurfaceView: widget.forceGLSurfaceView,
+          ),
+        ),
+        _naverLogo(widget.options),
+      ],
+    );
   }
 
   Widget _naverLogo(final NaverMapViewOptions options) {
     final align = options.logoAlign;
     final fullPadding = options.contentPadding + options.logoMargin;
     return Positioned(
-        left: align.isLeft ? fullPadding.left : null,
-        right: align.isRight ? fullPadding.right : null,
-        top: align.isTop ? fullPadding.top : null,
-        bottom: align.isBottom ? fullPadding.bottom : null,
-        child: FutureBuilder(
-            future: controllerCompleter.future,
-            builder: (context, snapshot) {
-              return NMapLogoWidget(
-                  naverMapController: snapshot.data,
-                  logoClickEnable: options.logoClickEnable);
-            }));
+      left: align.isLeft ? fullPadding.left : null,
+      right: align.isRight ? fullPadding.right : null,
+      top: align.isTop ? fullPadding.top : null,
+      bottom: align.isBottom ? fullPadding.bottom : null,
+      child: FutureBuilder(
+        future: controllerCompleter.future,
+        builder: (context, snapshot) {
+          return NMapLogoWidget(
+            naverMapController: snapshot.data,
+            logoClickEnable: options.logoClickEnable,
+          );
+        },
+      ),
+    );
   }
 
   void _onPlatformViewCreated(int id) {
     initChannel(NChannel.naverMapNativeView, id: id, handler: handle);
-    controller = NaverMapController._createController(channel,
-        viewId: id,
-        initialCameraPosition: widget.options.initialCameraPosition);
+    controller = NaverMapController._createController(
+      channel,
+      viewId: id,
+      initialCameraPosition: widget.options.initialCameraPosition,
+    );
   }
 
   Set<Factory<OneSequenceGestureRecognizer>> _createGestureRecognizers(
-      bool forceGesture) {
+    bool forceGesture,
+  ) {
     final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers = {};
     if (forceGesture) {
-      gestureRecognizers
-          .add(Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()));
+      gestureRecognizers.add(
+        Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()),
+      );
     }
     return gestureRecognizers;
   }
@@ -161,8 +173,9 @@ class _NaverMapState extends State<NaverMap>
     }
     if (nowClusterOptions != widget.clusterOptions) {
       nowClusterOptions = widget.clusterOptions;
-      updateQueue
-          .add(() => controller._updateClusteringOptions(nowClusterOptions!));
+      updateQueue.add(
+        () => controller._updateClusteringOptions(nowClusterOptions!),
+      );
     }
 
     if (updateQueue.isNotEmpty) {
@@ -215,7 +228,10 @@ class _NaverMapState extends State<NaverMap>
   // like hot stream. (if needed, migrate to stream based event handling)
   @override
   void onCameraChangeWithCameraPosition(
-      NCameraUpdateReason reason, bool animated, NCameraPosition position) {
+    NCameraUpdateReason reason,
+    bool animated,
+    NCameraPosition position,
+  ) {
     controller._updateNowCameraPositionData(position);
     widget.onCameraChange?.call(reason, animated);
   }
@@ -229,11 +245,33 @@ class _NaverMapState extends State<NaverMap>
 
   @override
   void onAnotherMethod(String methodName, dynamic args) {
+    print("[_NaverMapState] onAnotherMethod 호출 - methodName: $methodName");
+    print("[_NaverMapState] args 타입: ${args.runtimeType}");
+    print("[_NaverMapState] args 내용: $args");
+
     switch (methodName) {
       case "clusterMarkerBuilder":
-        nowClusterOptions?._handleClusterMarkerBuilder(
-            args, (controller as _NaverMapControllerImpl).overlayController);
+        print("[_NaverMapState] clusterMarkerBuilder 처리 시작");
+        print("[_NaverMapState] nowClusterOptions: $nowClusterOptions");
+        print("[_NaverMapState] controller 타입: ${controller.runtimeType}");
+
+        try {
+          final overlayController =
+              (controller as _NaverMapControllerImpl).overlayController;
+          print("[_NaverMapState] overlayController: $overlayController");
+
+          nowClusterOptions?._handleClusterMarkerBuilder(
+            args,
+            overlayController,
+          );
+          print("[_NaverMapState] _handleClusterMarkerBuilder 호출 완료");
+        } catch (e, stackTrace) {
+          print("[_NaverMapState] clusterMarkerBuilder 처리 실패: $e");
+          print("[_NaverMapState] stackTrace: $stackTrace");
+        }
         break;
+      default:
+        print("[_NaverMapState] 알 수 없는 methodName: $methodName");
     }
   }
 

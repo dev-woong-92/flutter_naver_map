@@ -59,7 +59,12 @@ internal class OverlayController(
 
     override fun saveOverlay(overlay: Overlay, info: NOverlayInfo) {
         info.saveAtOverlay(overlay)
-        detachOverlay(info)
+
+        // 🚨 클러스터 마커인 경우 기존 오버레이를 즉시 제거하지 않음
+        if (info.type != NOverlayType.CLUSTERABLE_MARKER) {
+            detachOverlay(info)
+        }
+
         overlays[info] = overlay
     }
 
@@ -79,8 +84,19 @@ internal class OverlayController(
 
     private fun detachOverlay(info: NOverlayInfo) {
         if (info.type == NOverlayType.LOCATION_OVERLAY) return
+
         val overlay = getOverlay(info)
-        overlay?.let(::detachOverlay)
+        overlay?.let {
+            // �� 클러스터 마커인 경우 지연 제거
+            if (info.type == NOverlayType.CLUSTERABLE_MARKER) {
+                // 100ms 후에 제거 (경쟁 조건 방지)
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    detachOverlay(it)
+                }, 100)
+            } else {
+                detachOverlay(it)
+            }
+        }
     }
 
     private fun detachOverlay(overlay: Overlay) {
@@ -106,7 +122,18 @@ internal class OverlayController(
         val query = NOverlayQuery.fromQuery(call.method)
         val overlay = getOverlay(query.info)
 
-        requireNotNull(overlay) { "overlay can't found because it's null" }
+        // 🚨 오버레이가 null인 경우 안전하게 처리
+        if (overlay == null) {
+            // 클러스터 마커인 경우 무시 (이미 삭제된 것으로 간주)
+            if (query.info.type == NOverlayType.CLUSTERABLE_MARKER) {
+                println("Cluster marker already removed: ${query.info.type}")
+                result.success(null)
+                return
+            }
+            // 다른 오버레이인 경우 오류 반환
+            result.error("OVERLAY_NOT_FOUND", "overlay can't found because it's null", null)
+            return
+        }
 
         val isInvokedOnCommonOverlay =
             handleOverlay(overlay, query.methodName, call.arguments, result)

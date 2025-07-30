@@ -257,11 +257,32 @@ internal class OverlayController: OverlaySender, OverlayHandler, ArrowheadPathOv
     }
 
     func setIcon(_ marker: NMFMarker, rawIcon: Any?) {
-        if let image = castOrNull(rawIcon, caster: NOverlayImage.fromMessageable)?.overlayImage {
-            marker.iconImage = image
+        print("[OverlayController] setIcon 시작")
+        print("[OverlayController] rawIcon: \(rawIcon ?? "nil")")
+        
+        if let rawIcon = rawIcon {
+            print("[OverlayController] rawIcon이 nil이 아님, NOverlayImage 변환 시도")
+            
+            do {
+                let nOverlayImage = NOverlayImage.fromMessageable(rawIcon)
+                print("[OverlayController] NOverlayImage 생성 성공: \(nOverlayImage)")
+                print("[OverlayController] path: \(nOverlayImage.path), mode: \(nOverlayImage.mode)")
+                
+                if let image = nOverlayImage.overlayImage {
+                    print("[OverlayController] overlayImage 생성 성공, 마커에 적용")
+                    marker.iconImage = image
+                    print("[OverlayController] marker.iconImage 설정 완료")
+                } else {
+                    print("[OverlayController] overlayImage가 nil입니다. 기본 마커 이미지를 사용합니다.")
+                    marker.iconImage = NMF_MARKER_IMAGE_GREEN
+                }
+            } catch {
+                print("[OverlayController] NOverlayImage 변환 실패: \(error)")
+                marker.iconImage = NMF_MARKER_IMAGE_GREEN
+            }
         } else {
+            print("[OverlayController] rawIcon이 nil입니다. 기본 마커 이미지를 사용합니다.")
             marker.iconImage = NMF_MARKER_IMAGE_GREEN
-            print("[OverlayController] setIcon: overlayImage가 nil입니다. 기본 마커 이미지를 사용합니다.")
         }
     }
 
