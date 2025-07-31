@@ -53,11 +53,11 @@ internal class NClusterInfo: NSObject, NClusterNode {
     func toMessageable() -> Dictionary<String, Any?> {
         return [
             "id": id,
-            "children": children.map { $0.toMessageable() },
+            "children": children.map { (child) in child.toMessageable() },
             "clusterSize": clusterSize,
             "position": position.toMessageable(),
             "mergedTagKey": mergedTagKey,
-            "mergedTag": mergedTag,
+            "mergedTag" : mergedTag,
         ]
     }
 
@@ -65,8 +65,8 @@ internal class NClusterInfo: NSObject, NClusterNode {
         guard let o = o as? NClusterInfo else { return false }
         if self === o { return true }
         return children == o.children
-            && clusterSize == o.clusterSize
-            && position == o.position
+        && clusterSize == o.clusterSize
+        && position == o.position
     }
 
     override var hash: Int {

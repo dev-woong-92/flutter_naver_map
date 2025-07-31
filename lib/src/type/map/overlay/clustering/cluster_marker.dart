@@ -16,22 +16,9 @@ class NClusterMarker extends _NMarkerWrapper<NClusterMarker> {
   }
 
   Future<void> _apply(_NOverlayController overlayController) async {
-    try {
-      print("[NClusterMarker] overlayController: $overlayController");
-
-      setIsVisible(true);
-      print("[NClusterMarker] setIsVisible(true) 성공");
-
-      _addedOnMap(overlayController);
-      print("[NClusterMarker] _addedOnMap 성공");
-
-      print("[NClusterMarker] _send 호출 전 - method: lSyncClusterMarker");
-      _send("lSyncClusterMarker", this);
-      print("[NClusterMarker] _send 성공");
-    } catch (e, stackTrace) {
-      print("[NClusterMarker] _apply 실패: $e");
-      print("[NClusterMarker] stackTrace: $stackTrace");
-    }
+    setIsVisible(true);
+    _addedOnMap(overlayController); // TODO: 삭제시 핸들링 유지 유무 확인
+    _send("lSyncClusterMarker", this);
   }
 
   /// 캡션이 어디에 위치하는 지 나타냅니다.
