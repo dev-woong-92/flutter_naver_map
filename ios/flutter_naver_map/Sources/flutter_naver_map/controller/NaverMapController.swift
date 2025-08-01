@@ -182,6 +182,12 @@ internal class NaverMapController: NaverMapControlSender, NaverMapControlHandler
         naverMapViewOptions!.updateWithNaverMapView(naverMap: naverMap, isFirst: false, customStyleCallbacks: getCustomStyleCallback())
         onSuccess(nil)
     }
+
+    func setContentPadding(rawEdgeInsets: Any, onSuccess: @escaping (Any?) -> Void) {
+        let applier = NaverMapApplierImpl(naverMap, isFirst: false)
+        applier.setContentPadding(rawEdgeInsets)
+        onSuccess(nil)
+    }
     
     func updateClusteringOptions(rawOptions: Dictionary<String, Any>, onSuccess: @escaping (Any?) -> Void) {
         do {
