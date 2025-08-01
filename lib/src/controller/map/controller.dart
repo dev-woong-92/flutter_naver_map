@@ -221,6 +221,11 @@ class _NaverMapControllerImpl
     await invokeMethod("forceRefresh");
   }
 
+  @override
+  Future<void> setContentPadding(NEdgeInsets edgeInsets) {
+    return invokeMethod("setContentPadding", edgeInsets);
+  }
+
   /*
     --- internal methods ---
    */

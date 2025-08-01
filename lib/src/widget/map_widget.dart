@@ -142,7 +142,13 @@ class _NaverMapState extends State<NaverMap>
 
   Widget _uiLayer(final NaverMapViewOptions options) {
     final uiLayerMargin = options.logoMargin;
-    final padding = options.contentPadding + uiLayerMargin;
+    final rawPadding = options.contentPadding + uiLayerMargin;
+    final padding = EdgeInsets.fromLTRB(
+      math.max(0.0, rawPadding.left),
+      math.max(0.0, rawPadding.top),
+      math.max(0.0, rawPadding.right),
+      math.max(0.0, rawPadding.bottom),
+    );
     return Padding(
       padding: padding,
       child: Stack(children: [

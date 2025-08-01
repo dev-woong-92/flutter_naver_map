@@ -15,6 +15,7 @@ import com.naver.maps.map.app.LegendActivity
 import com.naver.maps.map.app.OpenSourceLicenseActivity
 import com.naver.maps.map.indoor.IndoorSelection
 import com.naver.maps.map.overlay.LocationOverlay
+import dev.note11.flutter_naver_map.flutter_naver_map.applier.option.NaverMapApplierImpl
 import dev.note11.flutter_naver_map.flutter_naver_map.controller.clustering.ClusteringController
 import dev.note11.flutter_naver_map.flutter_naver_map.controller.overlay.OverlayHandler
 import dev.note11.flutter_naver_map.flutter_naver_map.converter.MapTypeConverter.toMessageable
@@ -228,6 +229,12 @@ internal class NaverMapController(
 
     override fun forceRefresh(onSuccess: () -> Unit) {
         naverMap.forceRefresh()
+        onSuccess()
+    }
+
+    override fun setContentPadding(rawEdgeInsets: Any, onSuccess: () -> Unit) {
+        val applier = NaverMapApplierImpl(naverMap)
+        applier.setContentPadding(rawEdgeInsets)
         onSuccess()
     }
 
