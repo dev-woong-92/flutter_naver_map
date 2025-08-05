@@ -48,10 +48,10 @@ class NOverlayImage with NMessageableWithMap {
     Size? size,
     required BuildContext context,
   }) async {
-    assert(
-        widget.runtimeType != Image,
-        "Do not use Image widget.\n"
-        "Instead, using `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
+    // assert(
+    //     widget.runtimeType != Image,
+    //     "Do not use Image widget.\n"
+    //     "Instead, using `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
     final imageBytes = await WidgetToImageUtil.widgetToImageByte(widget,
         size: size, context: context);
     final path = await ImageUtil.saveImage(imageBytes);
