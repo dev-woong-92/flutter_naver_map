@@ -49,6 +49,11 @@ class NOverlayImage with NMessageableWithMap {
     required BuildContext context,
     bool preloadImages = false,
   }) async {
+    print(
+        '🚀 [NOverlayImage] fromWidget called with preloadImages: $preloadImages');
+    print('🚀 [NOverlayImage] Widget type: ${widget.runtimeType}');
+    print('🚀 [NOverlayImage] Size: $size');
+
     if (!preloadImages) {
       assert(
           widget.runtimeType != Image,
@@ -59,13 +64,25 @@ class NOverlayImage with NMessageableWithMap {
     Widget finalWidget = widget;
 
     if (preloadImages) {
+      print('🔄 [NOverlayImage] Starting image preload process...');
       finalWidget = await _preloadImagesInWidget(widget, context);
+      print('✅ [NOverlayImage] Image preload process completed');
     }
 
+    print('🔄 [NOverlayImage] Converting widget to image bytes...');
     final imageBytes = await WidgetToImageUtil.widgetToImageByte(finalWidget,
         size: size, context: context);
+    print(
+        '✅ [NOverlayImage] Widget converted to image bytes (${imageBytes.length} bytes)');
+
+    print('🔄 [NOverlayImage] Saving image to file...');
     final path = await ImageUtil.saveImage(imageBytes);
-    return NOverlayImage._(path: path, mode: _NOverlayImageMode.widget);
+    print('✅ [NOverlayImage] Image saved to: $path');
+
+    final result = NOverlayImage._(path: path, mode: _NOverlayImageMode.widget);
+    print('🎉 [NOverlayImage] NOverlayImage created successfully');
+
+    return result;
   }
 
   /// 위젯 내부의 모든 이미지를 미리 로드합니다.
@@ -77,7 +94,12 @@ class NOverlayImage with NMessageableWithMap {
         widgetString.contains('DecorationImage') ||
         widgetString.contains('AssetImage');
 
+    print(
+        '🔍 [NOverlayImage] Widget string: ${widgetString.substring(0, widgetString.length > 100 ? 100 : widgetString.length)}...');
+    print('🔍 [NOverlayImage] Has images: $hasImages');
+
     if (!hasImages) {
+      print('🚀 [NOverlayImage] No images found, returning widget immediately');
       return widget; // 이미지가 없으면 바로 반환
     }
 
@@ -85,13 +107,17 @@ class NOverlayImage with NMessageableWithMap {
     final imageProviders = <ImageProvider>[];
     _findImageProviders(widget, imageProviders);
 
+    print('🔍 [NOverlayImage] Found ${imageProviders.length} image providers');
+
     // 모든 이미지 pre-load
     for (final provider in imageProviders) {
       try {
+        print('🔄 [NOverlayImage] Preloading image: ${provider.runtimeType}');
         await precacheImage(provider, context);
+        print('✅ [NOverlayImage] Successfully preloaded image');
       } catch (e) {
         // 개별 이미지 로드 실패는 무시하고 계속 진행
-        print('Failed to preload image: $e');
+        print('❌ [NOverlayImage] Failed to preload image: $e');
       }
     }
 
@@ -102,15 +128,22 @@ class NOverlayImage with NMessageableWithMap {
   static void _findImageProviders(Widget widget, List<ImageProvider> providers,
       {int depth = 0}) {
     // 🔥 성능 최적화: 깊이 제한 (너무 깊은 위젯 트리 방지)
-    if (depth > 10) return;
+    // if (depth > 10) return;
+
+    print(
+        '🔍 [NOverlayImage] Searching at depth $depth, widget type: ${widget.runtimeType}');
 
     if (widget is Image) {
+      print(
+          '🖼️ [NOverlayImage] Found Image widget: ${widget.image.runtimeType}');
       providers.add(widget.image);
     } else if (widget is Container) {
       final decoration = widget.decoration;
       if (decoration is BoxDecoration) {
         final backgroundImage = decoration.image;
         if (backgroundImage != null) {
+          print(
+              '🖼️ [NOverlayImage] Found Container with background image: ${backgroundImage.image.runtimeType}');
           providers.add(backgroundImage.image);
         }
       }
@@ -119,25 +152,32 @@ class NOverlayImage with NMessageableWithMap {
       if (decoration is BoxDecoration) {
         final backgroundImage = decoration.image;
         if (backgroundImage != null) {
+          print(
+              '🖼️ [NOverlayImage] Found DecoratedBox with background image: ${backgroundImage.image.runtimeType}');
           providers.add(backgroundImage.image);
         }
       }
     }
 
     // 🔥 성능 최적화: 이미 충분한 이미지를 찾았으면 조기 종료
-    if (providers.length >= 5) return;
+    // if (providers.length >= 5) return;
 
     // 자식 위젯들도 재귀적으로 검사
     final child = _getChild(widget);
     if (child != null) {
+      print('🔍 [NOverlayImage] Checking child widget at depth $depth');
       _findImageProviders(child, providers, depth: depth + 1);
     }
 
     final children = _getChildren(widget);
+    if (children.isNotEmpty) {
+      print(
+          '🔍 [NOverlayImage] Checking ${children.length} children at depth $depth');
+    }
     for (final child in children) {
       _findImageProviders(child, providers, depth: depth + 1);
       // 🔥 성능 최적화: 이미 충분한 이미지를 찾았으면 조기 종료
-      if (providers.length >= 5) break;
+      // if (providers.length >= 5) break;
     }
   }
 
