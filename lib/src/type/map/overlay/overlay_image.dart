@@ -41,36 +41,37 @@ class NOverlayImage with NMessageableWithMap {
   ///
   /// [size]를 `null`로 설정함과 동시에 constraint가 `infinity`가 되지 않도록 유의하세요.
   ///
-  /// [preloadImages]가 `true`일 경우, 위젯 내부의 이미지를 미리 로드한 후 렌더링합니다.
-  /// 이미지가 포함된 위젯을 사용할 때는 반드시 `preloadImages: true`로 설정하세요.
+  /// [appImages]를 전달하면 해당 AppImage들의 이미지를 미리 로드한 후 렌더링합니다.
+  /// 이미지가 포함된 위젯을 사용할 때는 반드시 `appImages`를 전달하세요.
   static Future<NOverlayImage> fromWidget({
     required Widget widget,
     Size? size,
     required BuildContext context,
-    bool preloadImages = false,
+    List<dynamic>? appImages, // AppImage 리스트
   }) async {
     print(
-        '🚀 [NOverlayImage] fromWidget called with preloadImages: $preloadImages');
+        '🚀 [NOverlayImage] fromWidget called with appImages: ${appImages?.length ?? 0}');
     print('🚀 [NOverlayImage] Widget type: ${widget.runtimeType}');
     print('🚀 [NOverlayImage] Size: $size');
 
-    if (!preloadImages) {
+    // AppImage가 없고 Image 위젯을 직접 사용하는 경우 경고
+    if (appImages == null || appImages.isEmpty) {
       assert(
           widget.runtimeType != Image,
-          "Do not use Image widget without preloadImages: true.\n"
-          "Set preloadImages: true or use `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
+          "Do not use Image widget without appImages.\n"
+          "Pass appImages list or use `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
     }
 
-    Widget finalWidget = widget;
-
-    if (preloadImages) {
-      print('🔄 [NOverlayImage] Starting image preload process...');
-      finalWidget = await _preloadImagesInWidget(widget, context);
-      print('✅ [NOverlayImage] Image preload process completed');
+    // AppImage 직접 전달 방식
+    if (appImages != null && appImages.isNotEmpty) {
+      print(
+          '🔄 [NOverlayImage] Preloading ${appImages.length} AppImages directly...');
+      await _preloadAppImages(appImages, context);
+      print('✅ [NOverlayImage] AppImage preload completed');
     }
 
     print('🔄 [NOverlayImage] Converting widget to image bytes...');
-    final imageBytes = await WidgetToImageUtil.widgetToImageByte(finalWidget,
+    final imageBytes = await WidgetToImageUtil.widgetToImageByte(widget,
         size: size, context: context);
     print(
         '✅ [NOverlayImage] Widget converted to image bytes (${imageBytes.length} bytes)');
@@ -85,126 +86,26 @@ class NOverlayImage with NMessageableWithMap {
     return result;
   }
 
-  /// 위젯 내부의 모든 이미지를 미리 로드합니다.
-  static Future<Widget> _preloadImagesInWidget(
-      Widget widget, BuildContext context) async {
-    // 🔥 성능 최적화: 간단한 문자열 체크로 이미지 존재 여부 확인
-    final widgetString = widget.toString();
-    final hasImages = widgetString.contains('Image') ||
-        widgetString.contains('DecorationImage') ||
-        widgetString.contains('AssetImage');
-
-    print(
-        '🔍 [NOverlayImage] Widget string: ${widgetString.substring(0, widgetString.length > 100 ? 100 : widgetString.length)}...');
-    print('🔍 [NOverlayImage] Has images: $hasImages');
-
-    if (!hasImages) {
-      print('🚀 [NOverlayImage] No images found, returning widget immediately');
-      return widget; // 이미지가 없으면 바로 반환
-    }
-
-    // 이미지가 있을 때만 재귀 탐색 수행
-    final imageProviders = <ImageProvider>[];
-    _findImageProviders(widget, imageProviders);
-
-    print('🔍 [NOverlayImage] Found ${imageProviders.length} image providers');
-
-    // 모든 이미지 pre-load
-    for (final provider in imageProviders) {
+  /// AppImage 리스트를 직접 pre-load합니다.
+  static Future<void> _preloadAppImages(
+      List<dynamic> appImages, BuildContext context) async {
+    for (final appImage in appImages) {
       try {
-        print('🔄 [NOverlayImage] Preloading image: ${provider.runtimeType}');
-        await precacheImage(provider, context);
-        print('✅ [NOverlayImage] Successfully preloaded image');
+        // AppImage에서 imageProvider 추출
+        final imageProvider = appImage.imageProvider;
+        if (imageProvider != null) {
+          print('🔄 [NOverlayImage] Preloading AppImage: ${appImage.path}');
+          await precacheImage(imageProvider, context);
+          print(
+              '✅ [NOverlayImage] Successfully preloaded AppImage: ${appImage.path}');
+        } else {
+          print(
+              '⚠️ [NOverlayImage] AppImage has no imageProvider: ${appImage.path}');
+        }
       } catch (e) {
-        // 개별 이미지 로드 실패는 무시하고 계속 진행
-        print('❌ [NOverlayImage] Failed to preload image: $e');
+        print('❌ [NOverlayImage] Failed to preload AppImage: $e');
       }
     }
-
-    return widget;
-  }
-
-  /// 재귀적으로 위젯 트리에서 이미지 프로바이더를 찾습니다.
-  static void _findImageProviders(Widget widget, List<ImageProvider> providers,
-      {int depth = 0}) {
-    // 🔥 성능 최적화: 깊이 제한 (너무 깊은 위젯 트리 방지)
-    // if (depth > 10) return;
-
-    print(
-        '🔍 [NOverlayImage] Searching at depth $depth, widget type: ${widget.runtimeType}');
-
-    if (widget is Image) {
-      print(
-          '🖼️ [NOverlayImage] Found Image widget: ${widget.image.runtimeType}');
-      providers.add(widget.image);
-    } else if (widget is Container) {
-      final decoration = widget.decoration;
-      if (decoration is BoxDecoration) {
-        final backgroundImage = decoration.image;
-        if (backgroundImage != null) {
-          print(
-              '🖼️ [NOverlayImage] Found Container with background image: ${backgroundImage.image.runtimeType}');
-          providers.add(backgroundImage.image);
-        }
-      }
-    } else if (widget is DecoratedBox) {
-      final decoration = widget.decoration;
-      if (decoration is BoxDecoration) {
-        final backgroundImage = decoration.image;
-        if (backgroundImage != null) {
-          print(
-              '🖼️ [NOverlayImage] Found DecoratedBox with background image: ${backgroundImage.image.runtimeType}');
-          providers.add(backgroundImage.image);
-        }
-      }
-    }
-
-    // 🔥 성능 최적화: 이미 충분한 이미지를 찾았으면 조기 종료
-    // if (providers.length >= 5) return;
-
-    // 자식 위젯들도 재귀적으로 검사
-    final child = _getChild(widget);
-    if (child != null) {
-      print('🔍 [NOverlayImage] Checking child widget at depth $depth');
-      _findImageProviders(child, providers, depth: depth + 1);
-    }
-
-    final children = _getChildren(widget);
-    if (children.isNotEmpty) {
-      print(
-          '🔍 [NOverlayImage] Checking ${children.length} children at depth $depth');
-    }
-    for (final child in children) {
-      _findImageProviders(child, providers, depth: depth + 1);
-      // 🔥 성능 최적화: 이미 충분한 이미지를 찾았으면 조기 종료
-      // if (providers.length >= 5) break;
-    }
-  }
-
-  /// 위젯에서 자식 위젯을 추출합니다.
-  static Widget? _getChild(Widget widget) {
-    if (widget is SizedBox) return widget.child;
-    if (widget is Container) return widget.child;
-    if (widget is Padding) return widget.child;
-    if (widget is Center) return widget.child;
-    if (widget is Align) return widget.child;
-    if (widget is ClipRRect) return widget.child;
-    if (widget is GestureDetector) return widget.child;
-    if (widget is Expanded) return widget.child;
-    if (widget is Flexible) return widget.child;
-    // 필요한 위젯 타입들을 추가
-    return null;
-  }
-
-  /// 위젯에서 자식 위젯들을 추출합니다.
-  static List<Widget> _getChildren(Widget widget) {
-    if (widget is Row) return widget.children;
-    if (widget is Column) return widget.children;
-    if (widget is Stack) return widget.children;
-    if (widget is Wrap) return widget.children;
-    // ListView는 children이 없으므로 제거
-    // 필요한 위젯 타입들을 추가
-    return [];
   }
 
   @override
