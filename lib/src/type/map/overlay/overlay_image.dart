@@ -41,21 +41,130 @@ class NOverlayImage with NMessageableWithMap {
   ///
   /// [size]를 `null`로 설정함과 동시에 constraint가 `infinity`가 되지 않도록 유의하세요.
   ///
-  /// 위젯의 내부에 되도록 이미지 위젯을 사용하지 마세요. (성능 이슈 및 로드가 되지 않는 현상이 발생합니다. 꼭 필요하다면, pre-load가 선행되어야 합니다.)
-  /// 대신 `NOverlayImage.fromAssetImage` 또는 `.fromFile` 혹은 `.fromByteArray` 생성자를 사용하세요.
+  /// [preloadImages]가 `true`일 경우, 위젯 내부의 이미지를 미리 로드한 후 렌더링합니다.
+  /// 이미지가 포함된 위젯을 사용할 때는 반드시 `preloadImages: true`로 설정하세요.
   static Future<NOverlayImage> fromWidget({
     required Widget widget,
     Size? size,
     required BuildContext context,
+    bool preloadImages = false,
   }) async {
-    // assert(
-    //     widget.runtimeType != Image,
-    //     "Do not use Image widget.\n"
-    //     "Instead, using `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
-    final imageBytes = await WidgetToImageUtil.widgetToImageByte(widget,
+    if (!preloadImages) {
+      assert(
+          widget.runtimeType != Image,
+          "Do not use Image widget without preloadImages: true.\n"
+          "Set preloadImages: true or use `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
+    }
+
+    Widget finalWidget = widget;
+
+    if (preloadImages) {
+      finalWidget = await _preloadImagesInWidget(widget, context);
+    }
+
+    final imageBytes = await WidgetToImageUtil.widgetToImageByte(finalWidget,
         size: size, context: context);
     final path = await ImageUtil.saveImage(imageBytes);
     return NOverlayImage._(path: path, mode: _NOverlayImageMode.widget);
+  }
+
+  /// 위젯 내부의 모든 이미지를 미리 로드합니다.
+  static Future<Widget> _preloadImagesInWidget(
+      Widget widget, BuildContext context) async {
+    // 🔥 성능 최적화: 간단한 문자열 체크로 이미지 존재 여부 확인
+    final widgetString = widget.toString();
+    final hasImages = widgetString.contains('Image') ||
+        widgetString.contains('DecorationImage') ||
+        widgetString.contains('AssetImage');
+
+    if (!hasImages) {
+      return widget; // 이미지가 없으면 바로 반환
+    }
+
+    // 이미지가 있을 때만 재귀 탐색 수행
+    final imageProviders = <ImageProvider>[];
+    _findImageProviders(widget, imageProviders);
+
+    // 모든 이미지 pre-load
+    for (final provider in imageProviders) {
+      try {
+        await precacheImage(provider, context);
+      } catch (e) {
+        // 개별 이미지 로드 실패는 무시하고 계속 진행
+        print('Failed to preload image: $e');
+      }
+    }
+
+    return widget;
+  }
+
+  /// 재귀적으로 위젯 트리에서 이미지 프로바이더를 찾습니다.
+  static void _findImageProviders(Widget widget, List<ImageProvider> providers,
+      {int depth = 0}) {
+    // 🔥 성능 최적화: 깊이 제한 (너무 깊은 위젯 트리 방지)
+    if (depth > 10) return;
+
+    if (widget is Image) {
+      providers.add(widget.image);
+    } else if (widget is Container) {
+      final decoration = widget.decoration;
+      if (decoration is BoxDecoration) {
+        final backgroundImage = decoration.image;
+        if (backgroundImage != null) {
+          providers.add(backgroundImage.image);
+        }
+      }
+    } else if (widget is DecoratedBox) {
+      final decoration = widget.decoration;
+      if (decoration is BoxDecoration) {
+        final backgroundImage = decoration.image;
+        if (backgroundImage != null) {
+          providers.add(backgroundImage.image);
+        }
+      }
+    }
+
+    // 🔥 성능 최적화: 이미 충분한 이미지를 찾았으면 조기 종료
+    if (providers.length >= 5) return;
+
+    // 자식 위젯들도 재귀적으로 검사
+    final child = _getChild(widget);
+    if (child != null) {
+      _findImageProviders(child, providers, depth: depth + 1);
+    }
+
+    final children = _getChildren(widget);
+    for (final child in children) {
+      _findImageProviders(child, providers, depth: depth + 1);
+      // 🔥 성능 최적화: 이미 충분한 이미지를 찾았으면 조기 종료
+      if (providers.length >= 5) break;
+    }
+  }
+
+  /// 위젯에서 자식 위젯을 추출합니다.
+  static Widget? _getChild(Widget widget) {
+    if (widget is SizedBox) return widget.child;
+    if (widget is Container) return widget.child;
+    if (widget is Padding) return widget.child;
+    if (widget is Center) return widget.child;
+    if (widget is Align) return widget.child;
+    if (widget is ClipRRect) return widget.child;
+    if (widget is GestureDetector) return widget.child;
+    if (widget is Expanded) return widget.child;
+    if (widget is Flexible) return widget.child;
+    // 필요한 위젯 타입들을 추가
+    return null;
+  }
+
+  /// 위젯에서 자식 위젯들을 추출합니다.
+  static List<Widget> _getChildren(Widget widget) {
+    if (widget is Row) return widget.children;
+    if (widget is Column) return widget.children;
+    if (widget is Stack) return widget.children;
+    if (widget is Wrap) return widget.children;
+    // ListView는 children이 없으므로 제거
+    // 필요한 위젯 타입들을 추가
+    return [];
   }
 
   @override
