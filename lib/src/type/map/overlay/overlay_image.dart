@@ -43,17 +43,13 @@ class NOverlayImage with NMessageableWithMap {
   ///
   /// [appImages]를 전달하면 해당 AppImage들의 이미지를 미리 로드한 후 렌더링합니다.
   /// 이미지가 포함된 위젯을 사용할 때는 반드시 `appImages`를 전달하세요.
+  /// 중복된 이미지는 자동으로 제거됩니다.
   static Future<NOverlayImage> fromWidget({
     required Widget widget,
     Size? size,
     required BuildContext context,
     List<dynamic>? appImages, // AppImage 리스트
   }) async {
-    print(
-        '🚀 [NOverlayImage] fromWidget called with appImages: ${appImages?.length ?? 0}');
-    print('🚀 [NOverlayImage] Widget type: ${widget.runtimeType}');
-    print('🚀 [NOverlayImage] Size: $size');
-
     // AppImage가 없고 Image 위젯을 직접 사용하는 경우 경고
     if (appImages == null || appImages.isEmpty) {
       assert(
@@ -62,48 +58,41 @@ class NOverlayImage with NMessageableWithMap {
           "Pass appImages list or use `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
     }
 
-    // AppImage 직접 전달 방식
+    // AppImage 직접 전달 방식 (중복 제거)
     if (appImages != null && appImages.isNotEmpty) {
-      print(
-          '🔄 [NOverlayImage] Preloading ${appImages.length} AppImages directly...');
       await _preloadAppImages(appImages, context);
-      print('✅ [NOverlayImage] AppImage preload completed');
     }
 
-    print('🔄 [NOverlayImage] Converting widget to image bytes...');
     final imageBytes = await WidgetToImageUtil.widgetToImageByte(widget,
         size: size, context: context);
-    print(
-        '✅ [NOverlayImage] Widget converted to image bytes (${imageBytes.length} bytes)');
-
-    print('🔄 [NOverlayImage] Saving image to file...');
     final path = await ImageUtil.saveImage(imageBytes);
-    print('✅ [NOverlayImage] Image saved to: $path');
 
-    final result = NOverlayImage._(path: path, mode: _NOverlayImageMode.widget);
-    print('🎉 [NOverlayImage] NOverlayImage created successfully');
-
-    return result;
+    return NOverlayImage._(path: path, mode: _NOverlayImageMode.widget);
   }
 
-  /// AppImage 리스트를 직접 pre-load합니다.
+  /// AppImage 리스트를 직접 pre-load합니다. (중복 제거)
   static Future<void> _preloadAppImages(
       List<dynamic> appImages, BuildContext context) async {
+    // 중복 제거를 위한 Set 사용
+    final uniquePaths = <String>{};
+    final uniqueAppImages = <dynamic>[];
+
     for (final appImage in appImages) {
+      if (!uniquePaths.contains(appImage.path)) {
+        uniquePaths.add(appImage.path);
+        uniqueAppImages.add(appImage);
+      }
+    }
+
+    // 중복이 제거된 이미지들만 pre-load
+    for (final appImage in uniqueAppImages) {
       try {
-        // AppImage에서 imageProvider 추출
         final imageProvider = appImage.imageProvider;
         if (imageProvider != null) {
-          print('🔄 [NOverlayImage] Preloading AppImage: ${appImage.path}');
           await precacheImage(imageProvider, context);
-          print(
-              '✅ [NOverlayImage] Successfully preloaded AppImage: ${appImage.path}');
-        } else {
-          print(
-              '⚠️ [NOverlayImage] AppImage has no imageProvider: ${appImage.path}');
         }
       } catch (e) {
-        print('❌ [NOverlayImage] Failed to preload AppImage: $e');
+        // 개별 이미지 로드 실패는 무시하고 계속 진행
       }
     }
   }
