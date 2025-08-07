@@ -41,21 +41,60 @@ class NOverlayImage with NMessageableWithMap {
   ///
   /// [size]를 `null`로 설정함과 동시에 constraint가 `infinity`가 되지 않도록 유의하세요.
   ///
-  /// 위젯의 내부에 되도록 이미지 위젯을 사용하지 마세요. (성능 이슈 및 로드가 되지 않는 현상이 발생합니다. 꼭 필요하다면, pre-load가 선행되어야 합니다.)
-  /// 대신 `NOverlayImage.fromAssetImage` 또는 `.fromFile` 혹은 `.fromByteArray` 생성자를 사용하세요.
+  /// [appImages]를 전달하면 해당 AppImage들의 이미지를 미리 로드한 후 렌더링합니다.
+  /// 이미지가 포함된 위젯을 사용할 때는 반드시 `appImages`를 전달하세요.
+  /// 중복된 이미지는 자동으로 제거됩니다.
   static Future<NOverlayImage> fromWidget({
     required Widget widget,
     Size? size,
     required BuildContext context,
+    List<dynamic>? appImages, // AppImage 리스트
   }) async {
-    assert(
-        widget.runtimeType != Image,
-        "Do not use Image widget.\n"
-        "Instead, using `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
+    // AppImage가 없고 Image 위젯을 직접 사용하는 경우 경고
+    if (appImages == null || appImages.isEmpty) {
+      assert(
+          widget.runtimeType != Image,
+          "Do not use Image widget without appImages.\n"
+          "Pass appImages list or use `NOverlayImage.fromAssetImage` or `.fromFile` or `.fromByteArray` Constructor.");
+    }
+
+    // AppImage 직접 전달 방식 (중복 제거)
+    if (appImages != null && appImages.isNotEmpty) {
+      await _preloadAppImages(appImages, context);
+    }
+
     final imageBytes = await WidgetToImageUtil.widgetToImageByte(widget,
         size: size, context: context);
     final path = await ImageUtil.saveImage(imageBytes);
+
     return NOverlayImage._(path: path, mode: _NOverlayImageMode.widget);
+  }
+
+  /// AppImage 리스트를 직접 pre-load합니다. (중복 제거)
+  static Future<void> _preloadAppImages(
+      List<dynamic> appImages, BuildContext context) async {
+    // 중복 제거를 위한 Set 사용
+    final uniquePaths = <String>{};
+    final uniqueAppImages = <dynamic>[];
+
+    for (final appImage in appImages) {
+      if (!uniquePaths.contains(appImage.path)) {
+        uniquePaths.add(appImage.path);
+        uniqueAppImages.add(appImage);
+      }
+    }
+
+    // 중복이 제거된 이미지들만 pre-load
+    for (final appImage in uniqueAppImages) {
+      try {
+        final imageProvider = appImage.imageProvider;
+        if (imageProvider != null) {
+          await precacheImage(imageProvider, context);
+        }
+      } catch (e) {
+        // 개별 이미지 로드 실패는 무시하고 계속 진행
+      }
+    }
   }
 
   @override
