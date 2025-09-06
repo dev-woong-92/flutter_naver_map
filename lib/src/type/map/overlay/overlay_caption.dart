@@ -40,6 +40,46 @@ class NOverlayCaption with NMessageableWithMap {
   /// 기본 값은 제한하지 않음을 의미하는 `0`입니다.
   final double requestWidth;
 
+  /// 텍스트 스타일 (굵게, 기울임 등)
+  ///
+  /// 기본값은 [FontStyle.normal]입니다.
+  final FontStyle fontStyle;
+
+  /// 텍스트 굵기
+  ///
+  /// 기본값은 [FontWeight.normal]입니다.
+  final FontWeight fontWeight;
+
+  /// 텍스트 정렬
+  ///
+  /// 기본값은 [TextAlign.center]입니다.
+  final TextAlign textAlign;
+
+  /// 텍스트 그림자
+  ///
+  /// 기본값은 null입니다.
+  final Shadow? textShadow;
+
+  /// 텍스트 장식 (밑줄, 취소선 등)
+  ///
+  /// 기본값은 [TextDecoration.none]입니다.
+  final TextDecoration textDecoration;
+
+  /// 텍스트 장식 색상
+  ///
+  /// 기본값은 null입니다.
+  final Color? decorationColor;
+
+  /// 텍스트 장식 스타일
+  ///
+  /// 기본값은 [TextDecorationStyle.solid]입니다.
+  final TextDecorationStyle decorationStyle;
+
+  /// 텍스트 장식 두께
+  ///
+  /// 기본값은 1.0입니다.
+  final double decorationThickness;
+
   const NOverlayCaption({
     required this.text,
     this.textSize = 12.0,
@@ -48,6 +88,14 @@ class NOverlayCaption with NMessageableWithMap {
     this.minZoom = NaverMapViewOptions.minimumZoom,
     this.maxZoom = NaverMapViewOptions.maximumZoom,
     this.requestWidth = 0,
+    this.fontStyle = FontStyle.normal,
+    this.fontWeight = FontWeight.normal,
+    this.textAlign = TextAlign.center,
+    this.textShadow,
+    this.textDecoration = TextDecoration.none,
+    this.decorationColor,
+    this.decorationStyle = TextDecorationStyle.solid,
+    this.decorationThickness = 1.0,
   });
 
   @override
@@ -59,5 +107,22 @@ class NOverlayCaption with NMessageableWithMap {
         "minZoom": minZoom,
         "maxZoom": maxZoom,
         "requestWidth": requestWidth,
+        "fontStyle": fontStyle.index,
+        "fontWeight": fontWeight.index,
+        "textAlign": textAlign.index,
+        "textShadow": textShadow != null
+            ? {
+                "color": textShadow!.color,
+                "offset": {
+                  "dx": textShadow!.offset.dx,
+                  "dy": textShadow!.offset.dy,
+                },
+                "blurRadius": textShadow!.blurRadius,
+              }
+            : null,
+        "textDecoration": textDecoration.toString(),
+        "decorationColor": decorationColor,
+        "decorationStyle": decorationStyle.index,
+        "decorationThickness": decorationThickness,
       });
 }
