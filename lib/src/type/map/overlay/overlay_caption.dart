@@ -40,6 +40,14 @@ class NOverlayCaption with NMessageableWithMap {
   /// 기본 값은 제한하지 않음을 의미하는 `0`입니다.
   final double requestWidth;
 
+  /// 텍스트의 최대 줄 수를 제한합니다.
+  ///
+  /// 지정된 줄 수를 초과하는 텍스트는 잘라내고 "..."을 추가합니다.
+  /// null인 경우 줄 수 제한이 없습니다.
+  ///
+  /// 기본값은 null입니다.
+  final int? maxLines;
+
   const NOverlayCaption({
     required this.text,
     this.textSize = 12.0,
@@ -48,11 +56,23 @@ class NOverlayCaption with NMessageableWithMap {
     this.minZoom = NaverMapViewOptions.minimumZoom,
     this.maxZoom = NaverMapViewOptions.maximumZoom,
     this.requestWidth = 0,
+    this.maxLines,
   });
+
+  /// maxLines에 따라 처리된 텍스트를 반환합니다.
+  String get processedText {
+    if (maxLines == null) return text;
+
+    final lines = text.split('\n');
+    if (lines.length <= maxLines!) return text;
+
+    return lines.take(maxLines!).join('\n') +
+        (lines.length > maxLines! ? '...' : '');
+  }
 
   @override
   NPayload toNPayload() => NPayload.make({
-        "text": text,
+        "text": processedText,
         "textSize": textSize,
         "color": color,
         "haloColor": haloColor,
