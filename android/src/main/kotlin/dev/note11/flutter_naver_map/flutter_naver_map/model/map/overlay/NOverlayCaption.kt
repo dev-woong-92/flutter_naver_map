@@ -43,7 +43,7 @@ internal data class NOverlayCaption(
         "minZoom" to minZoom,
         "maxZoom" to maxZoom,
         "requestWidth" to requestWidth,
-        "maxLines" to maxLines,
+        "maxLines" to (maxLines as Any?),
     )
 
     companion object {
