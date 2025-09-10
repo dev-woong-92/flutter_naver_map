@@ -63,10 +63,23 @@ class NOverlayCaption with NMessageableWithMap {
   String get processedText {
     String processedText = text;
 
-    // requestWidth는 네이티브 SDK에서 처리하므로 Flutter에서는 건드리지 않음
-    // 네이티브 SDK가 픽셀 단위로 정확히 처리하므로 Flutter에서 DP로 계산하면 부정확함
+    // maxLines를 먼저 고려하여 requestWidth 처리
+    if (maxLines != null && requestWidth > 0) {
+      // maxLines를 고려한 최적의 줄 길이 계산
+      final targetCharsPerLine = (text.length / maxLines!).ceil();
+      final requestCharsPerLine = (requestWidth / (textSize * 0.7)).round();
+      final charsPerLine = targetCharsPerLine < requestCharsPerLine
+          ? targetCharsPerLine
+          : requestCharsPerLine;
 
-    // maxLines 처리만 Flutter에서 강화
+      processedText =
+          _wrapTextByWidth(processedText, charsPerLine * textSize * 0.7);
+    } else if (requestWidth > 0) {
+      // requestWidth만 처리
+      processedText = _wrapTextByWidth(processedText, requestWidth);
+    }
+
+    // maxLines 처리 (줄 수 제한 및 ... 추가) - 강제 적용
     if (maxLines != null) {
       final lines = processedText.split('\n');
       if (lines.length > maxLines!) {
@@ -75,6 +88,33 @@ class NOverlayCaption with NMessageableWithMap {
     }
 
     return processedText;
+  }
+
+  /// 텍스트를 지정된 너비에 맞게 줄바꿈 처리합니다.
+  String _wrapTextByWidth(String text, double widthDp) {
+    // 한글 텍스트를 위한 근사치 계산 (한글은 더 넓은 폭을 차지)
+    final approximateCharsPerLine = (widthDp / (textSize * 0.7)).round();
+
+    if (text.length <= approximateCharsPerLine) return text;
+
+    // 한국어 텍스트는 글자 단위로 처리
+    final lines = <String>[];
+    String currentLine = '';
+
+    for (int i = 0; i < text.length; i++) {
+      if (currentLine.length < approximateCharsPerLine) {
+        currentLine += text[i];
+      } else {
+        lines.add(currentLine);
+        currentLine = text[i];
+      }
+    }
+
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+
+    return lines.join('\n');
   }
 
   @override
