@@ -63,12 +63,10 @@ class NOverlayCaption with NMessageableWithMap {
   String get processedText {
     String processedText = text;
 
-    // requestWidth 처리 (단순 줄바꿈만)
-    if (requestWidth > 0) {
-      processedText = _wrapTextByWidth(processedText, requestWidth);
-    }
+    // requestWidth는 네이티브 SDK에서 처리하므로 Flutter에서는 건드리지 않음
+    // 네이티브 SDK가 픽셀 단위로 정확히 처리하므로 Flutter에서 DP로 계산하면 부정확함
 
-    // maxLines 처리 (줄 수 제한 및 ... 추가)
+    // maxLines 처리만 Flutter에서 강화
     if (maxLines != null) {
       final lines = processedText.split('\n');
       if (lines.length > maxLines!) {
@@ -77,65 +75,6 @@ class NOverlayCaption with NMessageableWithMap {
     }
 
     return processedText;
-  }
-
-  /// 텍스트를 지정된 너비에 맞게 줄바꿈 처리합니다.
-  String _wrapTextByWidth(String text, double widthDp) {
-    // 한글 텍스트를 위한 근사치 계산 (한글은 더 넓은 폭을 차지)
-    final approximateCharsPerLine = (widthDp / (textSize * 0.7)).round();
-
-    if (text.length <= approximateCharsPerLine) return text;
-
-    // 한국어 텍스트는 글자 단위로 처리 (성능상 큰 차이 없음)
-    return _wrapByCharacters(text, approximateCharsPerLine);
-  }
-
-  /// 공백이 있는 텍스트를 단어 단위로 줄바꿈합니다.
-  String _wrapByWords(String text, int charsPerLine) {
-    final words = text.split(' ');
-    final lines = <String>[];
-    String currentLine = '';
-
-    for (final word in words) {
-      if ((currentLine + word).length <= charsPerLine) {
-        currentLine += (currentLine.isEmpty ? '' : ' ') + word;
-      } else {
-        if (currentLine.isNotEmpty) {
-          lines.add(currentLine);
-          currentLine = word;
-        } else {
-          // 단어가 한 줄보다 긴 경우 글자 단위로 처리
-          lines.addAll(_wrapByCharacters(word, charsPerLine).split('\n'));
-        }
-      }
-    }
-
-    if (currentLine.isNotEmpty) {
-      lines.add(currentLine);
-    }
-
-    return lines.join('\n');
-  }
-
-  /// 공백이 없는 텍스트를 글자 단위로 줄바꿈합니다.
-  String _wrapByCharacters(String text, int charsPerLine) {
-    final lines = <String>[];
-    String currentLine = '';
-
-    for (int i = 0; i < text.length; i++) {
-      if (currentLine.length < charsPerLine) {
-        currentLine += text[i];
-      } else {
-        lines.add(currentLine);
-        currentLine = text[i];
-      }
-    }
-
-    if (currentLine.isNotEmpty) {
-      lines.add(currentLine);
-    }
-
-    return lines.join('\n');
   }
 
   @override
