@@ -65,12 +65,6 @@ class NOverlayCaption with NMessageableWithMap {
 
     // maxLines만 처리
     if (maxLines != null) {
-      // maxLines를 고려한 최적의 줄 길이 계산
-      final targetCharsPerLine = (text.length / maxLines!).ceil();
-      processedText =
-          _wrapTextByWidth(processedText, targetCharsPerLine * textSize * 0.7);
-
-      // maxLines 강제 적용
       final lines = processedText.split('\n');
       if (lines.length > maxLines!) {
         processedText = lines.take(maxLines!).join('\n') + '...';
@@ -78,33 +72,6 @@ class NOverlayCaption with NMessageableWithMap {
     }
 
     return processedText;
-  }
-
-  /// 텍스트를 지정된 너비에 맞게 줄바꿈 처리합니다.
-  String _wrapTextByWidth(String text, double widthDp) {
-    // 한글 텍스트를 위한 근사치 계산 (한글은 더 넓은 폭을 차지)
-    final approximateCharsPerLine = (widthDp / (textSize * 0.7)).round();
-
-    if (text.length <= approximateCharsPerLine) return text;
-
-    // 한국어 텍스트는 글자 단위로 처리
-    final lines = <String>[];
-    String currentLine = '';
-
-    for (int i = 0; i < text.length; i++) {
-      if (currentLine.length < approximateCharsPerLine) {
-        currentLine += text[i];
-      } else {
-        lines.add(currentLine);
-        currentLine = text[i];
-      }
-    }
-
-    if (currentLine.isNotEmpty) {
-      lines.add(currentLine);
-    }
-
-    return lines.join('\n');
   }
 
   @override
