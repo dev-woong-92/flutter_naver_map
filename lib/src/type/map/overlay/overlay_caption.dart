@@ -63,12 +63,12 @@ class NOverlayCaption with NMessageableWithMap {
   String get processedText {
     String processedText = text;
 
-    // requestWidth 처리 (네이티브 SDK가 제대로 작동하지 않을 경우를 대비)
+    // requestWidth 처리 (단순 줄바꿈만)
     if (requestWidth > 0) {
       processedText = _wrapTextByWidth(processedText, requestWidth);
     }
 
-    // maxLines 처리
+    // maxLines 처리 (줄 수 제한 및 ... 추가)
     if (maxLines != null) {
       final lines = processedText.split('\n');
       if (lines.length > maxLines!) {
@@ -81,27 +81,53 @@ class NOverlayCaption with NMessageableWithMap {
 
   /// 텍스트를 지정된 너비에 맞게 줄바꿈 처리합니다.
   String _wrapTextByWidth(String text, double widthDp) {
-    // 간단한 근사치 계산 (실제로는 더 정확한 계산이 필요할 수 있음)
-    final approximateCharsPerLine = (widthDp / (textSize * 0.6)).round();
+    // 한글 텍스트를 위한 근사치 계산 (한글은 더 넓은 폭을 차지)
+    final approximateCharsPerLine = (widthDp / (textSize * 0.7)).round();
 
     if (text.length <= approximateCharsPerLine) return text;
 
+    // 한국어 텍스트는 글자 단위로 처리 (성능상 큰 차이 없음)
+    return _wrapByCharacters(text, approximateCharsPerLine);
+  }
+
+  /// 공백이 있는 텍스트를 단어 단위로 줄바꿈합니다.
+  String _wrapByWords(String text, int charsPerLine) {
     final words = text.split(' ');
     final lines = <String>[];
     String currentLine = '';
 
     for (final word in words) {
-      if ((currentLine + word).length <= approximateCharsPerLine) {
+      if ((currentLine + word).length <= charsPerLine) {
         currentLine += (currentLine.isEmpty ? '' : ' ') + word;
       } else {
         if (currentLine.isNotEmpty) {
           lines.add(currentLine);
           currentLine = word;
         } else {
-          // 단어가 한 줄보다 긴 경우 강제로 자름
-          lines.add(word.substring(0, approximateCharsPerLine));
-          currentLine = word.substring(approximateCharsPerLine);
+          // 단어가 한 줄보다 긴 경우 글자 단위로 처리
+          lines.addAll(_wrapByCharacters(word, charsPerLine).split('\n'));
         }
+      }
+    }
+
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+
+    return lines.join('\n');
+  }
+
+  /// 공백이 없는 텍스트를 글자 단위로 줄바꿈합니다.
+  String _wrapByCharacters(String text, int charsPerLine) {
+    final lines = <String>[];
+    String currentLine = '';
+
+    for (int i = 0; i < text.length; i++) {
+      if (currentLine.length < charsPerLine) {
+        currentLine += text[i];
+      } else {
+        lines.add(currentLine);
+        currentLine = text[i];
       }
     }
 
