@@ -59,15 +59,57 @@ class NOverlayCaption with NMessageableWithMap {
     this.maxLines,
   });
 
-  /// maxLines에 따라 처리된 텍스트를 반환합니다.
+  /// maxLines와 requestWidth에 따라 처리된 텍스트를 반환합니다.
   String get processedText {
-    if (maxLines == null) return text;
+    String processedText = text;
 
-    final lines = text.split('\n');
-    if (lines.length <= maxLines!) return text;
+    // requestWidth 처리 (네이티브 SDK가 제대로 작동하지 않을 경우를 대비)
+    if (requestWidth > 0) {
+      processedText = _wrapTextByWidth(processedText, requestWidth);
+    }
 
-    return lines.take(maxLines!).join('\n') +
-        (lines.length > maxLines! ? '...' : '');
+    // maxLines 처리
+    if (maxLines != null) {
+      final lines = processedText.split('\n');
+      if (lines.length > maxLines!) {
+        processedText = lines.take(maxLines!).join('\n') + '...';
+      }
+    }
+
+    return processedText;
+  }
+
+  /// 텍스트를 지정된 너비에 맞게 줄바꿈 처리합니다.
+  String _wrapTextByWidth(String text, double widthDp) {
+    // 간단한 근사치 계산 (실제로는 더 정확한 계산이 필요할 수 있음)
+    final approximateCharsPerLine = (widthDp / (textSize * 0.6)).round();
+
+    if (text.length <= approximateCharsPerLine) return text;
+
+    final words = text.split(' ');
+    final lines = <String>[];
+    String currentLine = '';
+
+    for (final word in words) {
+      if ((currentLine + word).length <= approximateCharsPerLine) {
+        currentLine += (currentLine.isEmpty ? '' : ' ') + word;
+      } else {
+        if (currentLine.isNotEmpty) {
+          lines.add(currentLine);
+          currentLine = word;
+        } else {
+          // 단어가 한 줄보다 긴 경우 강제로 자름
+          lines.add(word.substring(0, approximateCharsPerLine));
+          currentLine = word.substring(approximateCharsPerLine);
+        }
+      }
+    }
+
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+
+    return lines.join('\n');
   }
 
   @override
@@ -79,5 +121,6 @@ class NOverlayCaption with NMessageableWithMap {
         "minZoom": minZoom,
         "maxZoom": maxZoom,
         "requestWidth": requestWidth,
+        "maxLines": maxLines,
       });
 }

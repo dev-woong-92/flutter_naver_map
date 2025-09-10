@@ -15,6 +15,7 @@ internal data class NOverlayCaption(
     val minZoom: Double,
     val maxZoom: Double,
     val requestWidth: Double,
+    val maxLines: Int?,
 ) {
     fun useWithFunctions(
         textFunc: (String) -> Unit,
@@ -42,6 +43,7 @@ internal data class NOverlayCaption(
         "minZoom" to minZoom,
         "maxZoom" to maxZoom,
         "requestWidth" to requestWidth,
+        "maxLines" to maxLines,
     )
 
     companion object {
@@ -54,6 +56,7 @@ internal data class NOverlayCaption(
                 minZoom = it["minZoom"]!!.asDouble(),
                 maxZoom = it["maxZoom"]!!.asDouble(),
                 requestWidth = it["requestWidth"]!!.asDouble(),
+                maxLines = it["maxLines"]?.asInt(),
             )
         }
     }

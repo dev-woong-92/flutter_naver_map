@@ -8,6 +8,7 @@ internal struct NOverlayCaption {
     let minZoom: Double
     let maxZoom: Double
     let requestWidth: Double
+    let maxLines: Int?
 
     func toMessageable() -> Dictionary<String, Any> {
         [
@@ -17,7 +18,8 @@ internal struct NOverlayCaption {
             "haloColor": haloColor.toInt(),
             "minZoom": minZoom,
             "maxZoom": maxZoom,
-            "requestWidth": requestWidth
+            "requestWidth": requestWidth,
+            "maxLines": maxLines as Any
         ]
     }
 
@@ -30,7 +32,8 @@ internal struct NOverlayCaption {
                 haloColor: asUIColor(d["haloColor"]!),
                 minZoom: asDouble(d["minZoom"]!),
                 maxZoom: asDouble(d["maxZoom"]!),
-                requestWidth: asDouble(d["requestWidth"]!)
+                requestWidth: asDouble(d["requestWidth"]!),
+                maxLines: d["maxLines"] as? Int
         )
     }
 }
