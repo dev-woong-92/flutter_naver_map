@@ -59,36 +59,22 @@ class NOverlayCaption with NMessageableWithMap {
     this.maxLines,
   });
 
-  /// maxLines와 requestWidth에 따라 처리된 텍스트를 반환합니다.
+  /// maxLines에 따라 처리된 텍스트를 반환합니다.
   String get processedText {
     String processedText = text;
 
-    // maxLines가 있으면 먼저 고려하여 처리
+    // maxLines만 처리
     if (maxLines != null) {
       // maxLines를 고려한 최적의 줄 길이 계산
       final targetCharsPerLine = (text.length / maxLines!).ceil();
-
-      if (requestWidth > 0) {
-        final requestCharsPerLine = (requestWidth / (textSize * 0.7)).round();
-        final charsPerLine = targetCharsPerLine < requestCharsPerLine
-            ? targetCharsPerLine
-            : requestCharsPerLine;
-        processedText =
-            _wrapTextByWidth(processedText, charsPerLine * textSize * 0.7);
-      } else {
-        // requestWidth가 없으면 maxLines만 고려
-        processedText = _wrapTextByWidth(
-            processedText, targetCharsPerLine * textSize * 0.7);
-      }
+      processedText =
+          _wrapTextByWidth(processedText, targetCharsPerLine * textSize * 0.7);
 
       // maxLines 강제 적용
       final lines = processedText.split('\n');
       if (lines.length > maxLines!) {
         processedText = lines.take(maxLines!).join('\n') + '...';
       }
-    } else if (requestWidth > 0) {
-      // maxLines가 없으면 requestWidth만 처리
-      processedText = _wrapTextByWidth(processedText, requestWidth);
     }
 
     return processedText;
@@ -129,7 +115,7 @@ class NOverlayCaption with NMessageableWithMap {
         "haloColor": haloColor,
         "minZoom": minZoom,
         "maxZoom": maxZoom,
-        "requestWidth": 0, // Flutter에서 이미 처리했으므로 0으로 전송
+        "requestWidth": requestWidth,
         "maxLines": maxLines,
       });
 }
