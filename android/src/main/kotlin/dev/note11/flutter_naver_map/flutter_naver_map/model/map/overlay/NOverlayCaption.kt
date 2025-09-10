@@ -35,16 +35,19 @@ internal data class NOverlayCaption(
         requestWidthFunc(DisplayUtil.dpToPx(requestWidth))
     }
 
-    fun toMessageable(): Map<String, Any> = mapOf(
-        "text" to text,
-        "textSize" to textSize,
-        "color" to color,
-        "haloColor" to haloColor,
-        "minZoom" to minZoom,
-        "maxZoom" to maxZoom,
-        "requestWidth" to requestWidth,
-        "maxLines" to (maxLines as Any?),
-    )
+    fun toMessageable(): Map<String, Any> {
+        val map = mutableMapOf<String, Any>(
+            "text" to text,
+            "textSize" to textSize,
+            "color" to color,
+            "haloColor" to haloColor,
+            "minZoom" to minZoom,
+            "maxZoom" to maxZoom,
+            "requestWidth" to requestWidth,
+        )
+        maxLines?.let { map["maxLines"] = it }
+        return map
+    }
 
     companion object {
         fun fromMessageable(rawMap: Any): NOverlayCaption = rawMap.asMap().let {
